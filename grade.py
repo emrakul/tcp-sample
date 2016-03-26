@@ -134,7 +134,7 @@ class SimpleApplication(Application):
         if type(data) is not bytes:
             raise TypeError("data must be type bytes")
 
-        logger.debug("Application received %s from receiver", data)
+        logger.debug("Application receiver %s from receiver", data)
 
         self.received += data
         return True
@@ -189,19 +189,18 @@ def test_protocol():
     bad_network = [
         TestCase("One byte over network with huge packet loss",
                  SimulatingNetwork(latency=1, packet_loss=0.9),
-                 SimpleApplication([b'f'], timeout=1000)),
+                 SimpleApplication([b'f'], timeout=100)),
 
         TestCase("Network with packet reordering",
-                          SimulatingNetwork(mtu=50, latency=20, packet_reorder=10),
-                          SimpleApplication([b'test' for _ in range(10)], timeout=1000)),
-
-
+                 SimulatingNetwork(mtu=50, latency=20, packet_reorder=10),
+                 SimpleApplication([b'test' for _ in range(10)], timeout=1000)),
         TestCase("Network with data corruption",
                  SimulatingNetwork(mtu=50, latency=20, corruption=0.9),
                  SimpleApplication([b'test' for _ in range(10)], timeout=1000)),
-        #TestCase("Network with small packet loss",
-#                                  SimulatingNetwork(mtu=100, latency=1, packet_loss=0.05),
-#                                  SimpleApplication([b'test' for _ in range(10)], timeout=1000)),
+        TestCase("Network with small packet loss",
+                 SimulatingNetwork(mtu=100, latency=1, packet_loss=0.05),
+                 SimpleApplication([b'test' for _ in range(10)], timeout=1000)),
+
     ]
 
     simple_cases = [
@@ -225,7 +224,7 @@ def test_protocol():
     ]
 
 
-    run_simulation(simple_cases  + bad_network)
+    run_simulation(simple_cases + bad_network)
 
     print(WARNING + BOLD + "Test suite is incomplete, don't forget to pull latest changes" + ENDC)
 

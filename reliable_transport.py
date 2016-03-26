@@ -29,6 +29,8 @@ class Sender():
         self.current_number = 0
         self.cache = {}
         self.ids = set(range(2000))
+        self.rtt = 10
+        self.alpha = 0.05
 
     def on_msg(self, msg):
         number = struct.unpack('I', msg)
@@ -41,6 +43,8 @@ class Sender():
             """
         if number[0] in self.cache:
             logger.debug("FREED: %d", number[0])
+            sample = self.cache[number[0]][1]
+            self.rtt = int(self.alpha * self.rtt + (1-self.alpha)*sample)
             self.cache.pop(number[0])
             self.ids.add(number[0])
 
