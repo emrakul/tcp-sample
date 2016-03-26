@@ -31,11 +31,14 @@ class Sender():
         self.ids = set(range(2000))
 
     def on_msg(self, msg):
-        number = struct.unpack('i', msg)
+        number = struct.unpack('I', msg)
         logger.debug('number ACKed {}'.format(number[0]))
+        """
         if number[0] < 0:
-            logger.debug('\033[93m' + "Corrupted packet. Resending %d" + '\033[0m', -number[0])
+            logger.debug(self.cache)
+            self.cache[-number[0]][1] = 0
             self.network.send_packet(self.cache[-number[0]][0])
+            """
         if number[0] in self.cache:
             logger.debug("FREED: %d", number[0])
             self.cache.pop(number[0])
@@ -46,7 +49,7 @@ class Sender():
         logger.debug("TICK! Cache size %d", len(self.cache))
         for i in self.cache:
             self.cache[i][1] += 1
-            if self.cache[i][1] > 78:
+            if self.cache[i][1] > 12:
                 logger.debug('\033[93m' + "Resending %d" + '\033[0m', i)
                 self.network.send_packet(self.cache[i][0])
 
@@ -85,11 +88,11 @@ class Receiver():
         computed_crc = zlib.crc32(data)
         self.length = total_length
         if crc != computed_crc:
-            logger.debug('\033[93m' + "Corruption %d != %d" + '\033[0m', crc, computed_crc)
-            control = struct.pack('i', -number)
-            self.network.send_packet(control)
+            logger.debug('\033[93m' + "NOT Accepting. Corruption %d != %d" + '\033[0m', crc, computed_crc)
+            #control = struct.pack('i', -number)
+            #self.network.send_packet(control)
         else:
-            control = struct.pack('i', number)
+            control = struct.pack('I', number)
             self.network.send_packet(control)
             if total_length > 1:
                 self.cache[number] = data
